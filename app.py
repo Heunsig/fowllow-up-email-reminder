@@ -1,20 +1,20 @@
 from __future__ import print_function
 import time
 import sys
-import threading
+# import threading
 # import json
-from datetime import datetime
 import schedule
 import pydash
 import Smtp
 from GoogleSpreadsheet import GoogleSpreadsheet
+from datetime_helper import Easydate
 
 
-PROGRAM_FINISHED = True
+# PROGRAM_FINISHED = True
 
 
 def analzeNewProspective(values, indexs):
-  today = '04/19/19'
+  # global YESTERDAY
 
   students = []
   sources = []
@@ -23,7 +23,8 @@ def analzeNewProspective(values, indexs):
 
   for value in values:
     try:
-      if datetime.strptime(value[indexs["respondDate"]], '%m/%d/%Y').strftime('%m/%d/%y') == today:
+      # if date.strptime(value[indexs["respondDate"]], '%m/%d/%Y').strftime('%m/%d/%y') == Datetime.getToday():
+      if Easydate.convertDate(value[indexs["respondDate"]]) == Easydate.today():
         students.append([value[indexs["name"]]])
         sources.append(value[indexs["source"]])
         campuses.append(value[indexs["campus"]])
@@ -81,65 +82,76 @@ def reapeatGettingValues(GoogleAPI):
     smtp = Smtp.Smtp('heun3344@gmail.com', 'D8t44m5b@#', 'smtp.gmail.com', 587)
     smtp.login()
 
-    sendFollowUpEmail(smtp, firstFolloups, 'The First Follow up')
-
     sendAnalysisDataEmail(smtp, analysisData)
 
+    sendFollowUpEmail(smtp, firstFolloups, 'The First Follow up')
+    sendFollowUpEmail(smtp, secondFolloups, 'The Second Follow up')
+    sendFollowUpEmail(smtp, thirdFolloups, 'The Third Follow up')
+
     smtp.quit()
+
     # print(analzeNewProspective(values, indexs))
     # f = open('guru.json', 'w')
     # f.write(json.dumps(firstFolloups, separators=(',', ':')))
     # f.close()
 
-    # sendEmailSMTP(firstFolloups, 'The First Follow up')
-    # sendEmailSMTP(secondFolloups, 'The Second Follow up')
-    # sendEmailSMTP(thirdFolloups, 'The Third Follow up')
-
-    # break
-
-    # time.sleep(10)
-
 
 def appendFollowupList(arr, dateIndex, indexs):
+  # global TODAY
   dates = []
   # today = datetime.now().strftime('%m/%d/%y')
-  today = '04/19/19'
+  # today = '04/18/19'
 
   for item in arr:
     try:
-      try:
-        if datetime.strptime(item[dateIndex], '%m/%d/%y').strftime('%m/%d/%y') == today:
-
-          dates.append({
-              "contact": item[indexs["contact"]],
-              "campus": item[indexs["campus"]],
-              "name": item[indexs["name"]],
-              "source": item[indexs["source"]],
-              "phone": item[indexs["phone"]],
-              "email": item[indexs["email"]],
-              "nationality": item[indexs["nationality"]],
-              "details": item[indexs["details"]],
-              "date": item[dateIndex]
-          })
-      except ValueError:
-        try:
-          if datetime.strptime(item[dateIndex], '%m/%d/%Y').strftime('%m/%d/%y') == today:
-
-            dates.append({
-                "contact": item[indexs["contact"]],
-                "campus": item[indexs["campus"]],
-                "name": item[indexs["name"]],
-                "source": item[indexs["source"]],
-                "phone": item[indexs["phone"]],
-                "email": item[indexs["email"]],
-                "nationality": item[indexs["nationality"]],
-                "details": item[indexs["details"]],
-                "date": datetime.strptime(item[dateIndex], '%m/%d/%Y').strftime('%m/%d/%y')
-            })
-        except ValueError:
-          pass
-    except (IndexError):
+      if Easydate.convertDate(item[dateIndex]) == Easydate.today():
+        dates.append({
+            "contact": item[indexs["contact"]],
+            "campus": item[indexs["campus"]],
+            "name": item[indexs["name"]],
+            "source": item[indexs["source"]],
+            "phone": item[indexs["phone"]],
+            "email": item[indexs["email"]],
+            "nationality": item[indexs["nationality"]],
+            "details": item[indexs["details"]],
+            "date": item[dateIndex]
+        })
+    except IndexError:
       pass
+      # try:
+      #   try:
+      #     if Easydate.convertDate(item[dateIndex], '%m/%d/%y').strftime('%m/%d/%y') == Easydate.today():
+
+      #       dates.append({
+      #           "contact": item[indexs["contact"]],
+      #           "campus": item[indexs["campus"]],
+      #           "name": item[indexs["name"]],
+      #           "source": item[indexs["source"]],
+      #           "phone": item[indexs["phone"]],
+      #           "email": item[indexs["email"]],
+      #           "nationality": item[indexs["nationality"]],
+      #           "details": item[indexs["details"]],
+      #           "date": item[dateIndex]
+      #       })
+      #   except ValueError:
+      #     try:
+      #       if date.strptime(item[dateIndex], '%m/%d/%Y').strftime('%m/%d/%y') == TODAY:
+
+      #         dates.append({
+      #             "contact": item[indexs["contact"]],
+      #             "campus": item[indexs["campus"]],
+      #             "name": item[indexs["name"]],
+      #             "source": item[indexs["source"]],
+      #             "phone": item[indexs["phone"]],
+      #             "email": item[indexs["email"]],
+      #             "nationality": item[indexs["nationality"]],
+      #             "details": item[indexs["details"]],
+      #             "date": date.strptime(item[dateIndex], '%m/%d/%Y').strftime('%m/%d/%y')
+      #         })
+      #     except ValueError:
+      #       pass
+      # except (IndexError):
+      #   pass
 
   return dates
 
@@ -193,42 +205,6 @@ def sendAnalysisDataEmail(email_service, data):
 
   email_service.send(to='heun3344@gmail.com', subject='Yesterday summary', content=text)
 
-# def sendEmailSMTP(follows, subject):
-#   smtp = Smtp.Smtp('heun3344@gmail.com', 'D8t44m5b@#', 'smtp.gmail.com', 587)
-#   smtp.login()
-
-#   for follow in follows[0:1]:
-#     text = '''
-#     Hello %s,
-
-#     Today (%s) you need to do %s.
-#     Name: %s
-#     Nationality: %s
-#     Campus: %s
-#     Phone: %s
-#     Email: %s
-#     Details: %s
-
-#     Please don't forget sending a follow-up email for our students.
-#     Thank you.
-#     ''' % (follow["contact"], follow["date"], subject, follow["name"], follow["nationality"], follow["campus"], follow["phone"], follow["email"], follow["details"])
-#     print(text)
-
-#     smtp.send(to='heun3344@gmail.com', subject=subject, content=text)
-
-#     time.sleep(2)
-
-#   print('Finished sending emails!!!')
-#   smtp.quit()
-
-
-def inputToFinish():
-  while True:
-    key = input()
-    if key.lower() == 'finish':
-      PROGRAM_FINISHED = False
-      break
-
 
 def main():
   global PROGRAM_FINISHED
@@ -245,20 +221,14 @@ def main():
     if GoogleAPI.authorize():
       print('Authorized!!!')
 
-    # schedule.every(1).minutes.do(reapeatGettingValues, GoogleAPI=GoogleAPI)
-    schedule.every(2).seconds.do(reapeatGettingValues, GoogleAPI=GoogleAPI)
+    schedule.every(5).seconds.do(reapeatGettingValues, GoogleAPI=GoogleAPI)
+    # schedule.every().minute.at(":02").do(reapeatGettingValues, GoogleAPI=GoogleAPI)
 
     while True:
       schedule.run_pending()
       time.sleep(1)
 
-    # t = threading.Thread(target=reapeatGettingValues, args=(GoogleAPI,))
-    # t.start()
-
-    # inputToFinish()
-
   except KeyboardInterrupt:
-    # PROGRAM_FINISHED = False
     sys.exit()
 
   print('Program finished!!!')
@@ -266,4 +236,10 @@ def main():
 
 
 if __name__ == '__main__':
+  # # test = Good()
+  # # print(Good.yesterday())
+  # # print(Good.today())
+  # # print(Datetime.getToday())
+  # print(Good.convertDate('04/21/19') == Good.today())
+  # # print(datetime.strptime('04/04/19', '%m/%d/%y').date())
   main()
