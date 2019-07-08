@@ -23,7 +23,7 @@ class Smtp:
 
     self.server.sendmail(self.email_sender, [to], body.encode("utf8"))
 
-    print('email sent')
+    # print('email sent')
     # except:
     #   print('error sending mail')
 

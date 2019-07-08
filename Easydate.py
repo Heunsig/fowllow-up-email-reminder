@@ -11,6 +11,10 @@ class Easydate:
     return (date.today() - timedelta(1))
 
   @staticmethod
+  def now():
+    return datetime.now()
+
+  @staticmethod
   def convertDate(date):
     try:
       return datetime.strptime(date, '%m/%d/%y').date()
@@ -20,4 +24,7 @@ class Easydate:
         return datetime.strptime(date, '%m/%d/%Y').date()
 
       except ValueError:
-        return False
+        try:
+          return datetime.strptime(date, '%m/%d').date().replace(year=Easydate.today().year)
+        except ValueError:
+          pass
